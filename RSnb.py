@@ -10,19 +10,6 @@ import matplotlib.pyplot as plt
 
 
 
-
-st.set_page_config(page_title="Sales Intelligence Dashboard", layout="wide")
-
-def main():
-    st.title("Dashboard")
-    # rest of your code
-
-if __name__ == "__main__":
-    main()
-
-
-
-# --------------------------------------
 # Load and preprocess
 # --------------------------------------
 def load_data():
