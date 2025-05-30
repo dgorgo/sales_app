@@ -9,11 +9,16 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 
-#The App
-st.set_page_config(page_title="Sales Dashboard", layout="wide")
 
 
-st.title("Welcome to the Sales Dashboard")
+st.set_page_config(page_title="Sales Intelligence Dashboard", layout="wide")
+
+def main():
+    st.title("Dashboard")
+    # rest of your code
+
+if __name__ == "__main__":
+    main()
 
 
 
