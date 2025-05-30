@@ -64,20 +64,20 @@ def market_basket_analysis(df, container):
         st.write("📌 Frequent Itemsets")
         st.dataframe(frequent_items.sort_values('support', ascending=False))
 
-        st.write("📌 Association Rules")
-        st.dataframe(rules.sort_values('lift', ascending=False))
+        # st.write("📌 Association Rules")
+        # st.dataframe(rules.sort_values('lift', ascending=False))
 
-        st.subheader("📊 Support vs Confidence")
-        plt.figure(figsize=(8, 5))
-        sns.scatterplot(data=rules, x='support', y='confidence', hue='lift', size='lift', palette='viridis')
-        st.pyplot(plt)
+        # st.subheader("📊 Support vs Confidence")
+        # plt.figure(figsize=(8, 5))
+        # sns.scatterplot(data=rules, x='support', y='confidence', hue='lift', size='lift', palette='viridis')
+        # st.pyplot(plt)
 
 # --------------------------------------
 # Recommendation System
 # --------------------------------------
 def recommendation_system(df, container):
     with container:
-        st.subheader("🎯 SKU Recommendation System (SVD)")
+        st.subheader("🎯 SKU Recommendation System")
         required = {'salesman_code', 'sku_code', 'delivered_qty'}
         if not required.issubset(df.columns):
             st.error(f"Missing columns: {required}")
@@ -185,20 +185,20 @@ def brand_sku_performance(df, container):
 # --------------------------------------
 def main():
     st.set_page_config(page_title="Sales Intelligence Dashboard", layout="wide")
-    st.title("🧠 Unified Sales Intelligence Dashboard")
+    st.title("🧠 Market Cart Dashboard")
 
     df = load_data()
 
     tabs = st.tabs([
         "📦 Market Basket", "🎯 Recommendations", "📈 Forecasting",
-        "📊 Brand Performance", "📺 MMM (Dummy)"
+        "📊 Brand Performance", "Salesman Performance"
     ])
 
     market_basket_analysis(df, tabs[0])
     recommendation_system(df, tabs[1])
     forecast_sales(df, tabs[2])
     brand_sku_performance(df, tabs[3])
-    market_mix_modeling(df, tabs[4])
+    Salesman_performance(df, tabs[4])
 
 if __name__ == "__main__":
     main()
