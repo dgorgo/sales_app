@@ -3,6 +3,7 @@ mlxtend
 plotly
 pandas
 numpy
-scikit-surprise
+scipy
+scikit-learn
 matplotlib
 seaborn
