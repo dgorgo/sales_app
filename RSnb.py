@@ -104,18 +104,27 @@ def brand_sku_performance(df, container):
             st.warning("Missing 'brand' or 'redistribution_value' columns.")
 
 # -------------------- Salesman Performance (ADDED FUNCTION) --------------------
-def Salesman_performance(df, container):
+def top_bottom_salesmen(df, container):
     with container:
-        st.subheader("💼 Salesman Performance Overview")
+        st.subheader("🏅 Top & Bottom Performing Salesmen")
         if 'salesman_code' in df.columns and 'delivered_qty' in df.columns:
             performance = df.groupby('salesman_code')['delivered_qty'].sum().reset_index()
-            top_salesmen = performance.sort_values(by='delivered_qty', ascending=False)
-            st.write("Top Performing Salesmen:")
-            st.dataframe(top_salesmen)
-            st.plotly_chart(px.bar(top_salesmen, x='salesman_code', y='delivered_qty',
-                                   title='Salesman Delivered Quantity'))
+            top_5 = performance.sort_values('delivered_qty', ascending=False).head(5)
+            bottom_5 = performance.sort_values('delivered_qty', ascending=True).head(5)
+
+            st.write("🏆 Top 5 Salesmen by Delivered Quantity")
+            st.dataframe(top_5)
+
+            st.write("🔻 Bottom 5 Salesmen by Delivered Quantity")
+            st.dataframe(bottom_5)
+
+            fig = px.bar(performance.sort_values('delivered_qty', ascending=False),
+                         x='salesman_code', y='delivered_qty',
+                         title="Salesmen Performance", labels={'delivered_qty': 'Delivered Qty'})
+            st.plotly_chart(fig)
         else:
             st.warning("Missing 'salesman_code' or 'delivered_qty' columns.")
+
 
 # -------------------- Main App Layout --------------------
 def main():
@@ -133,7 +142,7 @@ def main():
     recommendation_system(df, tabs[1])
     forecast_sales(df, tabs[2])
     brand_sku_performance(df, tabs[3])
-    Salesman_performance(df, tabs[4])
+    top_bottom_salesmen(df, tabs[4])
 
 if __name__ == "__main__":
     main()
