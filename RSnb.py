@@ -129,7 +129,7 @@ def top_bottom_salesmen(df, container):
 # -------------------- Main App Layout --------------------
 def main():
     st.set_page_config(page_title="Sales Intelligence Dashboard", layout="wide")
-    st.title("🧠 Market Cart Dashboard")
+    st.title("🧺 Market Trend Dashboard")
 
     df = load_data()
 
