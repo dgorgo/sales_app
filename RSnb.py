@@ -4,13 +4,9 @@ import pandas as pd
 
 import numpy as np
  
-# pip install mlxtend scikit-surprise seaborn
-
 from mlxtend.frequent_patterns import apriori, association_rules
 
-from surprise import Dataset, Reader, SVD
-
-from surprise.model_selection import cross_validate
+from sklearn.decomposition import TruncatedSVD
  
 import matplotlib.pyplot as plt
 
@@ -18,160 +14,185 @@ import seaborn as sns
  
 st.title("MBA AND RS")
  
-uploaded_file = st.file_uploader("Upload your sales_df.csv", type=["csv"])
+# File uploader
+
+uploaded_file = st.file_uploader("Upload your sales_data.csv", type=["csv"])
+
+if uploaded_file is None:
+
+    st.info("📂 Please upload a CSV file to get started.")
+
+    st.stop()
  
-if uploaded_file:
+# Load data
 
-    try:
+try:
 
-        sales_data = pd.read_csv(uploaded_file)
+    sales_data = pd.read_csv(uploaded_file)
 
-        st.write("Data Preview:")
+except Exception as e:
 
-        st.dataframe(sales_data.head())
+    st.error(f"Error reading the CSV file: {e}")
 
-    except Exception as e:
-
-        st.error(f"Error reading the CSV file: {e}")
-
-        st.stop()
+    st.stop()
  
-    # Normalize column names for safety
+# Preview
 
-    sales_data.columns = sales_data.columns.str.strip().str.lower()
+st.write("**Data Preview:**")
+
+st.dataframe(sales_data.head())
  
-    # Parse dates if present
+# Normalize column names
 
-    if 'delivered_date' in sales_data.columns:
-
-        sales_data['delivered_date'] = pd.to_datetime(sales_data['delivered_date'], errors='coerce')
+sales_data.columns = sales_data.columns.str.strip().str.lower()
  
-    sales_data.dropna(inplace=True)
+# Parse date column if present
+
+if 'delivered_date' in sales_data.columns:
+
+    sales_data['delivered_date'] = pd.to_datetime(
+
+        sales_data['delivered_date'], errors='coerce'
+
+    )
  
-    st.subheader("Market Basket Analysis")
+# Drop any rows with missing values
 
-    if {'order_id', 'sku_code', 'delivered qty'}.issubset(sales_data.columns):
-
-        # Pivot to basket
-
-        basket = (
-
-            sales_data
-
-            .groupby(['order_id', 'sku_code'])['delivered qty']
-
-            .sum()
-
-            .unstack(fill_value=0)
-
-            .applymap(lambda x: 1 if x > 0 else 0)
-
-        )
+sales_data.dropna(inplace=True)
  
-        frequent_itemsets = apriori(basket, min_support=0.02, use_colnames=True)
+# ─── Market Basket Analysis
 
-        rules = association_rules(frequent_itemsets, metric='lift', min_threshold=1.0)
+st.subheader("Market Basket Analysis")
+
+mba_cols = {'order_id', 'sku_code', 'delivered qty'}
+
+if mba_cols.issubset(sales_data.columns):
+
+    basket = (
+
+        sales_data
+
+        .groupby(['order_id', 'sku_code'])['delivered qty']
+
+        .sum()
+
+        .unstack(fill_value=0)
+
+        .applymap(lambda x: 1 if x > 0 else 0)
+
+    )
  
-        st.write("Frequent Itemsets:")
+    frequent_itemsets = apriori(basket, min_support=0.02, use_colnames=True)
 
-        st.dataframe(frequent_itemsets.sort_values(by='support', ascending=False))
+    rules = association_rules(frequent_itemsets, metric='lift', min_threshold=1.0)
  
-        st.write("Association Rules:")
+    st.write("**Frequent Itemsets:**")
 
-        st.dataframe(rules.sort_values(by='lift', ascending=False))
+    st.dataframe(frequent_itemsets.sort_values('support', ascending=False))
  
-        # Visualization
+    st.write("**Association Rules:**")
 
-        st.subheader("Support vs. Confidence Scatter Plot")
-
-        plt.figure(figsize=(8, 5))
-
-        sns.scatterplot(
-
-            data=rules,
-
-            x='support', y='confidence',
-
-            hue='lift', size='lift', palette='viridis',
-
-            legend='brief'
-
-        )
-
-        plt.xlabel("Support")
-
-        plt.ylabel("Confidence")
-
-        plt.title("Support vs. Confidence")
-
-        st.pyplot(plt)
-
-    else:
-
-        st.error("Missing columns for MBA: need 'Order_Id', 'SKU_Code', and 'Delivered Qty'.")
+    st.dataframe(rules.sort_values('lift', ascending=False))
  
-    st.subheader("Recommendation System using SVD")
+    st.subheader("Support vs. Confidence")
 
-    if {'salesman_code', 'sku_code', 'delivered qty'}.issubset(sales_data.columns):
+    plt.figure(figsize=(8, 5))
 
-        reader = Reader(rating_scale=(1, sales_data['delivered qty'].max()))
+    sns.scatterplot(
 
-        data = Dataset.load_from_df(
+        data=rules,
 
-            sales_data[['salesman_code', 'sku_code', 'delivered qty']],
+        x='support', y='confidence',
 
-            reader
+        hue='lift', size='lift', palette='viridis',
 
-        )
+        legend='brief'
 
-        trainset = data.build_full_trainset()
+    )
 
-        algo = SVD()
+    plt.xlabel("Support")
 
-        cross_validate(algo, data, cv=5, verbose=True)
+    plt.ylabel("Confidence")
 
-        algo.fit(trainset)
+    plt.title("MBA: Support vs. Confidence")
+
+    st.pyplot(plt)
+
+else:
+
+    st.error(f"Missing columns for MBA; need {mba_cols}")
  
-        # Input widget
+# ─── Recommendation System via TruncatedSVD
 
-        min_code = int(sales_data['salesman_code'].min())
+st.subheader("Recommendation System (TruncatedSVD)")
 
-        max_code = int(sales_data['salesman_code'].max())
+rs_cols = {'salesman_code', 'sku_code', 'delivered qty'}
 
-        salesman_code = st.number_input(
+if rs_cols.issubset(sales_data.columns):
 
-            "Enter Salesman Code for recommendations:",
+    # Ensure salesman_code is numeric int
 
-            min_value=min_code, max_value=max_code
+    sales_data['salesman_code'] = pd.to_numeric(
 
-        )
+        sales_data['salesman_code'], errors='coerce'
+
+    )
+
+    sales_data.dropna(subset=['salesman_code'], inplace=True)
+
+    sales_data['salesman_code'] = sales_data['salesman_code'].astype(int)
  
-        if st.button("Get Recommendations"):
+    # Pivot to user-item matrix
 
-            product_ids = sales_data['sku_code'].unique()
+    user_item = sales_data.pivot_table(
 
-            preds = [
+        index='salesman_code',
 
-                (pid, algo.predict(salesman_code, pid).est)
+        columns='sku_code',
 
-                for pid in product_ids
+        values='delivered qty',
 
-            ]
+        fill_value=0
 
-            recommendations = (
+    )
+ 
+    # Fit TruncatedSVD
 
-                pd.DataFrame(preds, columns=['SKU_Code', 'Predicted Rating'])
+    svd = TruncatedSVD(n_components=20, random_state=42)
 
-                .sort_values(by='Predicted Rating', ascending=False)
+    user_factors = svd.fit_transform(user_item.values)
 
-                .head(10)
+    item_factors = svd.components_
 
-            )
+    preds = np.dot(user_factors, item_factors)
 
-            st.write("Top 10 Recommended Products:")
+    pred_df = pd.DataFrame(preds, index=user_item.index, columns=user_item.columns)
+ 
+    # Salesman selection
 
-            st.dataframe(recommendations)
+    salesmen = user_item.index.tolist()
 
-    else:
+    salesman = st.selectbox("Select Salesman Code:", options=salesmen)
+ 
+    if st.button("Get Recommendations"):
 
-        st.error("Missing columns for RS: need 'Salesman_Code', 'SKU_Code', and 'Delivered Qty'.")
+        actual = user_item.loc[salesman]
+
+        scores = pred_df.loc[salesman].copy()
+
+        # Mask out already purchased items
+
+        scores[actual > 0] = -np.inf
+
+        top10 = scores.nlargest(10).reset_index()
+
+        top10.columns = ['SKU_Code', 'Predicted Score']
+
+        st.write("**Top 10 Recommended Products:**")
+
+        st.dataframe(top10)
+
+else:
+
+    st.error(f"Missing columns for RS; need {rs_cols}")
+
