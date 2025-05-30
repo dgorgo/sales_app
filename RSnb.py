@@ -20,7 +20,7 @@
 #     st.info("📂 Please upload a CSV file to get started.")
 
 #     st.stop()
- import streamlit as st
+import streamlit as st
 import pandas as pd
 from mlxtend.frequent_patterns import apriori, association_rules
 from sklearn.decomposition import TruncatedSVD
