@@ -6,6 +6,12 @@ from sklearn.decomposition import TruncatedSVD
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+
+from prophet import Prophet
+import plotly.express as px
+from datetime import datetime
+
+
 # ------------------------- Load & Preprocess Data ---------------------------
 
 def load_data():
@@ -117,6 +123,88 @@ def recommendation_system(df, container):
             top10.columns = ['SKU_Code', 'Recommendation Score']
             st.write("🔍 Top Recommended SKUs:")
             st.dataframe(top10)
+
+
+
+# ─── Load and Preprocess Data ─────────────────────────────
+def load_data():
+    df = pd.read_csv("https://raw.githubusercontent.com/dgorgo/sales_app/main/sales_df.csv")
+    df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_')
+    df['delivered_date'] = pd.to_datetime(df['delivered_date'], errors='coerce')
+    df.dropna(subset=['delivered_date'], inplace=True)
+    return df
+
+# ─── Forecasting ──────────────────────────────────────────
+def forecast_sales(df):
+    st.subheader("📈 Prophet Forecasting")
+    sku = st.selectbox("Select SKU Code for Forecasting", df['sku_code'].unique())
+    sku_df = df[df['sku_code'] == sku].groupby('delivered_date')['delivered_qty'].sum().reset_index()
+    sku_df = sku_df.rename(columns={'delivered_date': 'ds', 'delivered_qty': 'y'})
+
+    model = Prophet()
+    model.fit(sku_df)
+
+    future = model.make_future_dataframe(periods=30)
+    forecast = model.predict(future)
+    fig = px.line(forecast, x='ds', y='yhat', title=f"Forecast for SKU {sku}")
+    st.plotly_chart(fig)
+
+# ─── Brand and SKU Performance ────────────────────────────
+def performance_charts(df):
+    st.subheader("📊 Brand and SKU Performance")
+    brand_perf = df.groupby('brand')['redistribution_value'].sum().reset_index()
+    sku_perf = df.groupby('sku_code')['redistribution_value'].sum().reset_index()
+
+    st.plotly_chart(px.bar(brand_perf, x='brand', y='redistribution_value', title="Brand Performance"))
+    st.plotly_chart(px.bar(sku_perf, x='sku_code', y='redistribution_value', title="SKU Performance"))
+
+# ─── Salesperson Specific Views ───────────────────────────
+def salesperson_views(df):
+    st.subheader("🧍‍♂️ Salesperson Performance")
+    person = st.selectbox("Select Salesperson", df['salesman_name'].unique())
+    person_df = df[df['salesman_name'] == person]
+
+    monthly_perf = person_df.groupby(person_df['delivered_date'].dt.to_period('M'))['redistribution_value'].sum().reset_index()
+    monthly_perf['delivered_date'] = monthly_perf['delivered_date'].astype(str)
+
+    st.plotly_chart(px.line(monthly_perf, x='delivered_date', y='redistribution_value', title=f"Monthly Performance for {person}"))
+    st.write("Recent Sales Transactions")
+    st.dataframe(person_df[['delivered_date', 'sku_code', 'delivered_qty', 'redistribution_value']].sort_values(by='delivered_date', ascending=False))
+
+# ─── Dummy Marketing Mix Modeling ─────────────────────────
+def mmm_section():
+    st.subheader("📦 Marketing Mix Modeling (MMM) - Dummy Data")
+    dummy = pd.DataFrame({
+        'TV_Spend': [20, 25, 30, 35, 40],
+        'Social_Spend': [5, 10, 15, 20, 25],
+        'Search_Spend': [3, 4, 6, 8, 10],
+        'Sales': [200, 240, 300, 370, 410]
+    })
+    st.dataframe(dummy)
+    st.caption("Add regression modeling in next iteration.")
+
+# ─── Main App ─────────────────────────────────────────────
+def main():
+    st.title("📊 Sales Analytics Dashboard")
+    df = load_data()
+
+    tab1, tab2, tab3, tab4 = st.tabs(["Forecasting", "Brand/SKU", "Salesperson", "MMM"])
+
+    with tab1:
+        forecast_sales(df)
+    with tab2:
+        performance_charts(df)
+    with tab3:
+        salesperson_views(df)
+    with tab4:
+        mmm_section()
+
+if __name__ == '__main__':
+    main()
+
+
+
+
 
 # ------------------------- Main App Layout ----------------------------------
 
