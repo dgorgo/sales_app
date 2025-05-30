@@ -1,37 +1,58 @@
-import streamlit as st
+# import streamlit as st
 
-import pandas as pd
-import numpy as np
+# import pandas as pd
+# import numpy as np
  
+# from mlxtend.frequent_patterns import apriori, association_rules
+# from sklearn.decomposition import TruncatedSVD
+
+# import matplotlib.pyplot as plt
+# import seaborn as sns
+ 
+# st.title("SalesMan Market")
+ 
+# # File uploader
+
+# uploaded_file = st.file_uploader("sales_df.csv", type=["csv"])
+
+# if uploaded_file is None:
+
+#     st.info("📂 Please upload a CSV file to get started.")
+
+#     st.stop()
+ import streamlit as st
+import pandas as pd
 from mlxtend.frequent_patterns import apriori, association_rules
 from sklearn.decomposition import TruncatedSVD
-
 import matplotlib.pyplot as plt
 import seaborn as sns
- 
+
 st.title("SalesMan Market")
- 
-# File uploader
 
-uploaded_file = st.file_uploader("sales_df.csv", type=["csv"])
-
-if uploaded_file is None:
-
-    st.info("📂 Please upload a CSV file to get started.")
-
-    st.stop()
- 
-# Load data
+# Load data from GitHub (raw link)
+github_csv_url = "https://raw.githubusercontent.com/dgorgo/sales_app/main/sales_df.csv"
 
 try:
-
-    sales_data = pd.read_csv(uploaded_file)
-
+    sales_data = pd.read_csv(github_csv_url)
+    st.success("✅ Sales data loaded successfully from GitHub!")
 except Exception as e:
-
-    st.error(f"Error reading the CSV file: {e}")
-
+    st.error(f"❌ Error reading the CSV file from GitHub: {e}")
     st.stop()
+
+# Show first few rows
+st.write(sales_data.head())
+
+# # Load data
+
+# try:
+
+#     sales_data = pd.read_csv(uploaded_file)
+
+# except Exception as e:
+
+#     st.error(f"Error reading the CSV file: {e}")
+
+#     st.stop()
  
 # Preview
 
