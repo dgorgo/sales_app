@@ -56,9 +56,9 @@ st.write(sales_data.head())
  
 # Preview
 
-st.write("**Data Preview:**")
+#st.write("**Data Preview:**")
 
-st.dataframe(sales_data.head())
+#st.dataframe(sales_data.head())
  
 # Normalize column names
 
@@ -202,11 +202,11 @@ if rs_cols.issubset(sales_data.columns):
 
         scores[actual > 0] = -np.inf
 
-        top10 = scores.nlargest(10).reset_index()
+        top10 = scores.nlargest(3).reset_index()
 
         top10.columns = ['SKU_Code', 'Predicted Score']
 
-        st.write("**Top 10 Recommended Products:**")
+        st.write("**Top 3 Recommended Products:**")
 
         st.dataframe(top10)
 
