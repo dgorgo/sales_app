@@ -142,19 +142,13 @@ else:
  
 # ─── Recommendation System via TruncatedSVD
 
-st.subheader("Recommendation System (TruncatedSVD)")
+st.subheader("Recommendation System")
 
 rs_cols = {'salesman_code', 'sku_code', 'delivered qty'}
 
 if rs_cols.issubset(sales_data.columns):
-
-    # Ensure salesman_code is numeric int
-
-    sales_data['salesman_code'] = pd.to_numeric(
-
-        sales_data['salesman_code'], errors='coerce'
-
-    )
+ sales_data['salesman_code'] = pd.to_numeric(
+       sales_data['salesman_code'], errors='coerce')
 
     sales_data.dropna(subset=['salesman_code'], inplace=True)
 
@@ -202,15 +196,14 @@ if rs_cols.issubset(sales_data.columns):
 
         scores[actual > 0] = -np.inf
 
-        top10 = scores.nlargest(3).reset_index()
+        top10 = scores.nlargest(10).reset_index()
 
         top10.columns = ['SKU_Code', 'Predicted Score']
 
-        st.write("**Top 3 Recommended Products:**")
+        st.write("**Top 10 Recommended Products:**")
 
         st.dataframe(top10)
 
 else:
 
     st.error(f"Missing columns for RS; need {rs_cols}")
-
