@@ -148,11 +148,9 @@ rs_cols = {'salesman_code', 'sku_code', 'delivered qty'}
 
 if rs_cols.issubset(sales_data.columns):
  sales_data['salesman_code'] = pd.to_numeric(
-       sales_data['salesman_code'], errors='coerce')
-
-    sales_data.dropna(subset=['salesman_code'], inplace=True)
-
-    sales_data['salesman_code'] = sales_data['salesman_code'].astype(int)
+ sales_data['salesman_code'], errors='coerce')
+ sales_data.dropna(subset=['salesman_code'], inplace=True)
+ sales_data['salesman_code'] = sales_data['salesman_code'].astype(int)
  
     # Pivot to user-item matrix
 
