@@ -1,22 +1,19 @@
 import streamlit as st
 
 import pandas as pd
-
 import numpy as np
  
 from mlxtend.frequent_patterns import apriori, association_rules
-
 from sklearn.decomposition import TruncatedSVD
- 
-import matplotlib.pyplot as plt
 
+import matplotlib.pyplot as plt
 import seaborn as sns
  
-st.title("MBA AND RS")
+st.title("SalesMan Market")
  
 # File uploader
 
-uploaded_file = st.file_uploader("Upload your sales_data.csv", type=["csv"])
+uploaded_file = st.file_uploader("sales_df.csv", type=["csv"])
 
 if uploaded_file is None:
 
