@@ -33,26 +33,26 @@ def market_basket_analysis(df, container):
             return
 
         # Prepare the basket (order-product matrix)
-basket = (
-df.groupby(['order_id', 'sku_code'])['delivered_qty']
-.sum().unstack(fill_value=0)
-.applymap(lambda x: 1 if x > 0 else 0)
-)
+    basket = (
+    df.groupby(['order_id', 'sku_code'])['delivered_qty']
+    .sum().unstack(fill_value=0)
+    .applymap(lambda x: 1 if x > 0 else 0)
+    )
 
         # Apply Apriori to find frequent itemsets
-frequent_items = apriori(basket, min_support=0.02, use_colnames=True)
+    frequent_items = apriori(basket, min_support=0.02, use_colnames=True)
+    
+            # Generate association rules
+    rules = association_rules(frequent_items, metric="lift", min_threshold=1.0)
+    rules = rules[['antecedents', 'consequents', 'support', 'confidence', 'lift']]
+    rules['antecedents'] = rules['antecedents'].apply(lambda x: ', '.join(list(x)))
+    rules['consequents'] = rules['consequents'].apply(lambda x: ', '.join(list(x)))
 
-        # Generate association rules
-rules = association_rules(frequent_items, metric="lift", min_threshold=1.0)
-rules = rules[['antecedents', 'consequents', 'support', 'confidence', 'lift']]
-rules['antecedents'] = rules['antecedents'].apply(lambda x: ', '.join(list(x)))
-rules['consequents'] = rules['consequents'].apply(lambda x: ', '.join(list(x)))
-
-st.write("📌 Frequent Itemsets")
-st.dataframe(frequent_items.sort_values('support', ascending=False))
-
-st.write("📈 Association Rules (with Confidence and Lift)")
-st.dataframe(rules.sort_values(by='lift', ascending=False).reset_index(drop=True))
+    st.write("📌 Frequent Itemsets")
+    st.dataframe(frequent_items.sort_values('support', ascending=False))
+    
+    st.write("📈 Association Rules (with Confidence and Lift)")
+    st.dataframe(rules.sort_values(by='lift', ascending=False).reset_index(drop=True))
 
 
 # def market_basket_analysis(df, container):
